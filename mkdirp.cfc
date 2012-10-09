@@ -19,16 +19,17 @@ component output="false" displayname="mkdirp" extends="foundry.core"  {
 
 	    if (!structKeyExists(arguments, 'made')) made = '';
 
-	    var noop = function() {}
+	    var noop = function() {};
 
 	    var cb = (_.isFunction(f)) ? f : noop;
 	    //if (!isNumeric(mode)) mode = FormatBaseN(LSParseNumber(mode), 8);
 	    p = path.resolve(p);
 
 	    fs.mkdir(p, mode, function(er) {
-	        if (!structKeyExists(arguments, 'er')) {
-	            made = made || p;
-	            return cb(null, made);
+	        if (!structKeyExists(arguments, 'er') || _.isEmpty(arguments.er.message)) {
+	            made = (!_.isEmpty(made)) ? made : p;
+	            cb("", made);
+	            return false;
 	        }
 
 	        switch (er.errorCode) {
@@ -39,13 +40,12 @@ component output="false" displayname="mkdirp" extends="foundry.core"  {
 	                });
 	                break;
 
-
 	            default:
 	                fs.stat(p, function(er2, stat) {
 	                    if (structKeyExists(arguments, 'er2') || !directoryExists(stat)) {
 	                    	cb(er, made);
 	                    } else {
-	                    	cb(null, made);
+	                    	cb("", made);
 	                    }
 	                });
 	                break;
@@ -65,7 +65,7 @@ component output="false" displayname="mkdirp" extends="foundry.core"  {
 	    try {
 	        fs.mkdir(p, mode);
 	        made = made || p;
-	    } catch (err0) {
+	    } catch (any err0) {
 	        switch (err0.code) {
 	            case 'ENOENT':
 	                made = sync(path.dirname(p), mode, made);
@@ -80,7 +80,7 @@ component output="false" displayname="mkdirp" extends="foundry.core"  {
 	                try {
 	                    stat = fs.statSync(p);
 	                }
-	                catch (err1) {
+	                catch (any err1) {
 	                    throw err0;
 	                }
 	                if (!directoryExists(stat)) throw err0;
